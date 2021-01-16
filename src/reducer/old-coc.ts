@@ -1,7 +1,6 @@
 import {createSlice,PayloadAction,createEntityAdapter, configureStore,combineReducers, Store} from '@reduxjs/toolkit'
 import oldCoCJson from '../assets/old-coc-status.json'
 import skill from '../components/old-coc/skill'
-import { damageBonusType } from '../plugins/old-coc/oldCoC'
 import _, { values } from 'lodash'
 
 export type abilityName = "battle" | "find" | "move" | "talk" | "int"
@@ -9,6 +8,10 @@ export  type mainStatusName = "STR" | "CON" | "POW" | "SIZ" | "DEX" | "APP" | "I
 export  type secondStatusName = "HP" | "MP" | "SAN" | "アイデア" | "幸運" | "知識"
 export type abilityType = {
     [key in abilityName]:Skill[]
+}
+export type damageBonusType = {
+    status:number,
+    damage:string
 }
 
 export const {ability,status,damageBonus}:{ability:abilityType,status:statusType,damageBonus:damageBonusType[]} = JSON.parse(JSON.stringify(oldCoCJson))
@@ -21,7 +24,14 @@ export type Skill = {
     job:number
     hobby:number
     other:number
-    skillId:string
+    type:string
+}
+
+export type SkillArray = {
+    id:string
+    skill: {
+        [key:string]:Skill
+    }
 }
 
 export type MainStatusType = {
@@ -46,110 +56,43 @@ export type statusType = {
     secondStatus:SecondStatusType[]
 }
 
-
-export type OldCoC = {
-    name:string
-    // mainStatus:MainStatusType[]
-    // secondStatus:SecondStatusType[]
-    statusCell:["昇降値","その他"]
-    // skill:abilityType
-}
-
-const mainStatusAdapter = createEntityAdapter<MainStatusType>({
-    selectId: (firstStatus) => firstStatus.name,
-})
-
-const mainStatusSlice = createSlice({
-    name: 'mainStatus',
-    initialState: mainStatusAdapter.getInitialState(status.mainStatus.map((v,i)=>v)),
-    reducers:{
-        mainStatusSetAll(state,action){
-            mainStatusAdapter.setAll(state,action.payload.mainStatus)
-        }
-    }
-})
-
-const secondStatusAdapter = createEntityAdapter<SecondStatusType>({
-    selectId:(secondStatus)=>secondStatus.name
-})
-
-const secondStatusSlice = createSlice({
-    name:'secondStatus',
-    initialState: secondStatusAdapter.getInitialState(status.secondStatus.map(v=>v)),
-    reducers:{
-        secondStatusSetAll(state,action){
-            secondStatusAdapter.setAll(state,action.payload.secondStatus)
-        },
-    }
-})
-
-const skillAdapter = createEntityAdapter<Skill>({
-    selectId:(skill) =>skill.skillId
-})
-
-const skillSlice = createSlice({
-    name:'skill',
-    initialState:skillAdapter.getInitialState(skill),
-    reducers:{
-        skillSetAll(state,action){
-            skillAdapter.setAll(state,action.payload.skill)
-        }
-    }
-})
-
-
-export const oldCoCInitialState: OldCoC = {
-    name: "",
-    // mainStatus:status.mainStatus,
-    // secondStatus:status.secondStatus,
-    statusCell:["昇降値","その他"],
-    // skill:ability
-}
-
-const  slice = createSlice({
-    name:"old-coc",
-    initialState:oldCoCInitialState,
-    reducers: {
-        setName:(state,action:PayloadAction<string>)=>({...state,name:action.payload}),
-    }
-})
-const {setName} = slice.actions
-const {mainStatusSetAll} = mainStatusSlice.actions
-const {secondStatusSetAll} = secondStatusSlice.actions
-export const oldCoCSheet = combineReducers({
-        name:slice.reducer,
-        mainStatus:mainStatusSlice.reducer,
-        secondStatus:secondStatusSlice.reducer,
-})
-
-type oldCoCSheet = {
+type characterSheet = {
     id?:string
     name:string,
-    mainStatus:typeof mainStatusSlice
-    secondStatus:typeof secondStatusSlice
-    skill:typeof skillSlice
+    descriptionId:string[],
+    statusId: string[],
+    skillId: string[],
+    type: 'OLDCOC'
 }
 
-export const characterSheet = createEntityAdapter<oldCoCSheet>({
+export const characterSheet = createEntityAdapter<characterSheet>({
     selectId:state=>state.id
 })
 
-const oldCoCSlice = createSlice({
+export const characterSlice = createSlice({
     name:'old-coc',
     initialState:characterSheet.getInitialState(),
+        
     reducers:{
-        createOldCoCSheet(state,payload){
-            const createAdd = {...payload.payload,...status,skill:_.map(ability,v=>v).flat(),id:state.ids.length + 1}
-            characterSheet.addOne(state,createAdd)
-        },
-        updateOldCoCSheet:characterSheet.updateOne
+        createOldCoCSheet(state){
+            const length = state.ids.length
+            const createData:characterSheet= {
+                id:length.toString(),
+                name:"",
+                descriptionId:[],
+                statusId:[`${length}s${length * 2}`,`${length}s${length * 2 + 1}`],
+                skillId:[`${length}s${length}`],
+                type:'OLDCOC'
+            }
+            characterSheet.addOne(state,createData)
+        }
     }
 })
-export const {createOldCoCSheet,updateOldCoCSheet} = oldCoCSlice.actions
+export const {createOldCoCSheet} = characterSlice.actions
 
 
 export const store = configureStore({
     reducer:{
-        characterSheet:oldCoCSlice.reducer
+        character:characterSlice.reducer,
     }
 })

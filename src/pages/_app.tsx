@@ -7,7 +7,8 @@ import {ThemeProvider as MaterialUIThemeProvider,StylesProvider} from '@material
 import CssBaseline from '@material-ui/core/CssBaseline'
 import theme from '../styles/theme'
 import Header from '../components/big/header'
-import {SiteProvider} from '../reducer/index'
+import {SiteProvider, store} from '../reducer/index'
+import { Provider } from 'react-redux'
 
 const MyApp = ({Component,pageProps}):JSX.Element => {
   useEffect(() =>{
@@ -20,6 +21,7 @@ const MyApp = ({Component,pageProps}):JSX.Element => {
 
 
   return (
+    <Provider store={store}>
     <StylesProvider injectFirst>
       <MaterialUIThemeProvider theme={theme}>
         <SiteProvider>
@@ -29,6 +31,7 @@ const MyApp = ({Component,pageProps}):JSX.Element => {
         </SiteProvider>
       </MaterialUIThemeProvider>
     </StylesProvider>
+    </Provider>
   )
 }
 export default MyApp

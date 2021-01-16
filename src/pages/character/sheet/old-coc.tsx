@@ -1,15 +1,17 @@
-import {OldCoC} from '../../../plugins/old-coc/oldCoC'
-import {useState,useEffect} from 'react'
 import StatusPage from '../../../components/old-coc/status'
 import SkillPage from '../../../components/old-coc/skill'
-const oldCoC = new OldCoC({})
+import { store } from '../../../reducer'
+import { CREATE_OLDCOC } from '../../../reducer/middlewareAction'
 
-export default function OldCoCPage({}){
-    const [characterState,characterSet] =useState(oldCoC)
-    
+export default function OldCoCPage({id}){
 
     return (<>
-    <StatusPage stateProps={characterState} />
-    <SkillPage stateProps={characterState}></SkillPage>
+    <StatusPage id={id} />
+    <SkillPage id={id[0]}></SkillPage>
     </>)
+}
+
+store.dispatch(CREATE_OLDCOC)
+OldCoCPage.getInitialProps = async () => {
+    return {id:[0,1]}
 }
