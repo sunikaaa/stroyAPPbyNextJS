@@ -50,6 +50,7 @@ export type SecondStatusType = {
     updown?:string
     formula:string
     statusId:string
+    id:number
 }
 export type statusType = {
     mainStatus:MainStatusType[]
@@ -85,7 +86,8 @@ export const characterSlice = createSlice({
                 type:'OLDCOC'
             }
             characterSheet.addOne(state,createData)
-        }
+        },
+        createStatus:characterSheet.addOne
     }
 })
 export const {createOldCoCSheet} = characterSlice.actions

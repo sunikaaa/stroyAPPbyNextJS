@@ -105,7 +105,7 @@ export const statusSlice = createSlice({
             }
             statusAdapter.updateOne(state,{id:changeId,changes:changes})
         }
-    }
+    },
 })
 
 
