@@ -1,6 +1,6 @@
 import { Provider, RootStateOrAny, useSelector } from 'react-redux'
 import {store} from './index'
-import {CREATE_OLDCOC} from './middlewareAction'
+import {CREATE_OLDCOC,CREATE_OLDCOC2} from './middlewareAction'
 import {skillSelectors,skillSelectById} from './skill'
 import {statusSelectById} from './status'
 import React from "react";
@@ -16,9 +16,9 @@ const  Test = ()=>{
 
 
 test("store",()=>{
-    console.log(store.getState())
-    store.dispatch(CREATE_OLDCOC)
-    store.dispatch(CREATE_OLDCOC)
-    const component = renderer.create(<Provider store={store}><Test></Test></Provider>)
-    const tree =component.toJSON()
+    store.dispatch(CREATE_OLDCOC2)
+    store.dispatch(CREATE_OLDCOC2)
+    store.dispatch(CREATE_OLDCOC2)
+    // const component = renderer.create(<Provider store={store}><Test></Test></Provider>)
+    // const tree =component.toJSON()
 })

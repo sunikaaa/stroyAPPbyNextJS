@@ -1,8 +1,9 @@
 import _ from 'lodash'
 import {damageBonus, status,damageBonusType, statusType} from './old-coc'
-import {createSlice,createEntityAdapter, configureStore} from '@reduxjs/toolkit'
+import {createSlice,createEntityAdapter, configureStore, Dictionary, createSelector} from '@reduxjs/toolkit'
 import { arrayToObj,diceRoll } from '../plugins/benri'
 import { RootStateOrAny } from 'react-redux'
+import { storeType } from '.'
 
 
 export  type mainStatusName = "STR" | "CON" | "POW" | "SIZ" | "DEX" | "APP" | "INT" | "EDU"
@@ -24,9 +25,16 @@ export const getters =  {
     sum(status:StatusType):number{
         return Number(status.roll) + Number(status.updown) + Number(status.other)
     },
-    damageBonus(statusBox:StatusTypeBox):damageBonusType{
-        const {status} = statusBox
-        const {STR,SIZ} = status
+    damageBonus(statusBox:Dictionary<StatusTypeBox>,ids:string[]):damageBonusType{
+        let STR:StatusTypeBox,SIZ:StatusTypeBox
+        ids.forEach(v=>{
+            if(statusBox[v]?.name === 'STR'){
+                STR = statusBox[v]
+            }
+            if(statusBox[v]?.name === 'SIZ'){
+                SIZ = statusBox[v]
+            }
+        })
         if(STR && SIZ){
             const damage = getters.sum(STR) + getters.sum(SIZ)
             return damageBonus.reduceRight((result,cu)=>{
@@ -34,6 +42,14 @@ export const getters =  {
             })
         }
         return {status:NaN,damage:"ERROR this status not include 'STR' or 'SIZ'"}
+    },
+    calcRoll(statusBox:Dictionary<StatusTypeBox>,ids:string[][]){
+        const [mainIds,secondIds] = ids
+        secondStatusId.forEach(statusId=>{
+            const formula = statusBox[statusId].formula.split(" ")
+            const formulaMap = formula.map(v=>{
+            })
+        })
     }
 }
 export type StatusTypeBox = {
@@ -88,3 +104,15 @@ export const store = configureStore({
         status:statusSlice2.reducer
     }
 })
+export const statusSelectors = statusAdapter.getSelectors(
+    (state:storeType)=>state.status
+)
+export const statusSelectById = (id:string) => _.partialRight(statusSelectors.selectById,id)
+export const statusSelectByIdsBox = createSelector(
+    (state:storeType)=> state,
+    (state:storeType,ids:string[])=>ids,
+    (state:storeType,ids:string[])=>{
+        return statusSelectors.selectAll(state).filter(status=>ids.some(id=>status.statusId === id))    }
+)
+
+export const statusSelectByIds = (ids:string[]) => _.partialRight(statusSelectByIdsBox,ids)

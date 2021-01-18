@@ -1,11 +1,13 @@
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState, useEffect, ChangeEvent } from 'react'
+import React, { useState, useEffect, ChangeEvent, useCallback } from 'react'
 import { Container, Button } from '@material-ui/core'
-import {store} from '../../reducer/index'
+import {store, storeType} from '../../reducer/index'
 import {CREATE_OLDCOC} from '../../reducer/middlewareAction'
-import {calcRoll, getters, statusSelectById,StatusType,StatusTypeBox,updateDiceRoll,updateStatus} from '../../reducer/status'
+import {getters, mainStatusId, statusSelectById,statusSelectByIds,statusSelectors,StatusType,StatusTypeBox,updateStatus} from '../../reducer/status2'
 import { useSelector } from 'react-redux';
-import _ from 'lodash'
+import _, { values } from 'lodash'
+import { Classes } from '@material-ui/styles/mergeClasses/mergeClasses';
+import { calcRoll } from '../../plugins/benri';
 const useStyles = makeStyles({
     table: {
         width: '60px'
@@ -22,46 +24,17 @@ const useStyles = makeStyles({
 
 
 
-export default function CreateCharSheet({id}) {
+export default function CreateCharSheet({ids}:{ids:string[][]}) {
     const classes = useStyles();
-    const mainStatusState = useSelector(statusSelectById(id[0]))
-    const secondStatusState = useSelector(statusSelectById(id[1]))
-    // const [mainStatusState, mainStatusSet] = useState(stateProps.status.mainStatus)
-    // const [secondStatusState, secondStatusSet] = useState(stateProps.status.secondStatus)
-    const diceRoll = () => {
-        store.dispatch(updateDiceRoll({id:id[0]}))
+    const [mainStatusIds,secondStatusIds] = ids
+    const statusAll = useSelector(statusSelectors.selectEntities)
+    const mainStatus = useSelector(statusSelectByIds(ids[0]))
+    const secondStatus = useSelector(statusSelectByIds(ids[1]))
+    const diceRoll = () =>{
+        mainStatus.forEach(v=>{
+            store.dispatch(updateStatus({id:v.statusId,changes:{roll:calcRoll(v.dice).toString()}}))
+        })
     }
-    const changeFn = (state: StatusTypeBox) => {
-        return (changeStr: string) => {
-            return function (event: React.ChangeEvent<HTMLInputElement>, status: StatusType) {
-                const changeStatus = _.cloneDeep(status)
-                changeStatus[changeStr] = event.target.value
-                const data:StatusTypeBox = {
-                    id:state.id,
-                    status:{
-                        ...state.status,
-                        [status.name] : changeStatus
-                    }
-                }
-                store.dispatch(updateStatus({ id:state.id, changes:{...data} }))
-            }
-        }}
-    const changeMain = changeFn(mainStatusState)
-    const changeRoll = changeMain("roll")
-    const changeChangeNum = changeMain("updown")
-    const changeOther = changeMain("other")
-
-    const secondTableFn = changeFn(secondStatusState)
-    const changeSecondChangeNum = secondTableFn("updown")
-    const changeSecondOther = secondTableFn("other")
-
-    useEffect(() => {
-        store.dispatch(calcRoll({id:id}))
-    }, [mainStatusState])
-
-    useEffect(()=>{
-        store.dispatch(CREATE_OLDCOC)
-    },[])
     return <><Container maxWidth="sm" className="mt-10">
         <Button onClick={diceRoll}>ダイスロール！！</Button>
         <div className="mt-10">
@@ -75,12 +48,9 @@ export default function CreateCharSheet({id}) {
                         <th>その他</th>
                         <th>合計</th>
                     </tr>
-                    {_.map(mainStatusState.status,(colum, i) => (<tr key={i + "tr"}><th>{colum.name}</th>
-                        <th><input type="number" className={classes.table} value={colum.roll} onChange={(e) => changeRoll(e, colum)} /></th>
-                        <th><input type="number" className={classes.table} value={colum.updown} onChange={(e) => changeChangeNum(e, colum)} /></th>
-                        <th><input type="number" className={classes.table} value={colum.other} onChange={(e) => changeOther(e, colum)} /></th>
-                        <th>{getters.sum(colum)}</th>
-                    </tr>))}
+                    {mainStatusIds.map((id, i)=>(
+                        <MainStatusTableTR id={id} key={id} secondStatus={secondStatus} mainStatus={mainStatus} />
+                    ))}
                 </tbody>
             </table>
             <table className="table-auto">
@@ -92,13 +62,8 @@ export default function CreateCharSheet({id}) {
                         <th>その他</th>
                         <th>合計</th>
                     </tr>
-                {_.map(secondStatusState.status,(colum, i) => (<tr key={i + "second"}><th>{colum.name}</th>
-                    <th>{colum.roll}</th>
-                    <th><input type="number" className={classes.table} value={colum.updown} onChange={(e) => changeSecondChangeNum(e, colum)} /></th>
-                    <th><input type="number" className={classes.table} value={colum.other} onChange={(e) => changeSecondOther(e, colum)} /></th>
-                    <th>{getters.sum(colum)}</th>
-                </tr>))}
-                <tr><th colSpan={2} >ダメージボーナス</th><th colSpan={2}>{getters.damageBonus(mainStatusState).damage}</th></tr>
+                {secondStatusIds.map((id, i) =>(<SecondStatusTableTR id={id} key={id} mainIds={mainStatusIds}  />))}
+                <tr><th colSpan={2} >ダメージボーナス</th><th colSpan={2}>{getters.damageBonus(statusAll,ids[0]).damage}</th></tr>
                 </tbody>
             </table>
         </div>
@@ -109,3 +74,53 @@ export default function CreateCharSheet({id}) {
     </>
 
 }
+
+const MainStatusTableTR = React.memo(({id,secondStatus,mainStatus}:{id:string,secondStatus:StatusTypeBox[],mainStatus:StatusTypeBox[]})=>{
+    const status = useSelector(statusSelectById(id))
+    const classes = useStyles()
+    const memoizeCallback = useCallback(
+        (value,adapterName) => {
+            store.dispatch(updateStatus({id,changes:{[adapterName]:value}}))
+        },
+        [status]
+    )
+    useEffect(()=>{
+        secondStatus.forEach(s=>{
+            // 計算式の名前が含んでる場合のみ回す
+            if(s.formula.includes(status.name)){
+                const formula = s.formula.split(" ")
+                const formulaMap = formula.map(v=>{
+                    const findData = _.find(mainStatus,status=>status.name === v)
+                    return findData ? getters.sum(findData) : v
+                }).join('')
+                const formulaed = _.isNumber(eval(formulaMap)) ? Math.ceil(eval(formulaMap)) : NaN
+                console.log(s,formulaed)
+                store.dispatch(updateStatus({id:s.statusId,changes:{roll:formulaed.toString()}}))
+            }
+        })
+ 
+    },[status])
+    return <TR status={status} classes={classes} dispatch={memoizeCallback}></TR>
+})
+const SecondStatusTableTR =React.memo(({id,mainIds}:{id:string,mainIds:string[]})=>{
+    const status = useSelector(statusSelectById(id))
+    const classes = useStyles()
+    const memoizeCallback = useCallback(
+        (value,adapterName) => {
+            store.dispatch(updateStatus({id,changes:{[adapterName]:value}}))
+        },
+        [status]
+    )
+    return <TR status={status} classes={classes} dispatch={memoizeCallback} isInput={false}></TR>
+})
+const TR = React.memo( ({status,classes,dispatch,isInput = true}:{status:StatusTypeBox,classes:Classes,dispatch:any,isInput?:boolean})=>{
+    return <>
+    <tr>
+        <th>{status.name}</th>
+        <th>{isInput ? <input value={status.roll} type="number" className={classes.table} onChange={(e) => dispatch(e.target.value,'roll')} /> : status.roll}</th>
+        <th><input value={status.updown}  type="number" className={classes.table} onChange={(e) => dispatch(e.target.value,'updown')} /></th>
+        <th><input value={status.other}  type="number"  className={classes.table} onChange={(e) => dispatch(e.target.value,'other')} /></th>
+        <th>{getters.sum(status)}</th>
+    </tr>
+</>
+})

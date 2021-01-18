@@ -1,9 +1,9 @@
 import React,{ReactChildren, useReducer} from 'react'
-import {configureStore} from '@reduxjs/toolkit'
+import {configureStore, EntityState} from '@reduxjs/toolkit'
 
-import {characterSlice} from './old-coc'
-import {skillSlice} from './skill'
-import {statusSlice} from './status'
+import {characterSheet2, characterSheetAdapter, characterSlice} from './old-coc'
+import {Skill, skillSlice2} from './skill2'
+import {statusSlice2, StatusType, StatusTypeBox} from './status2'
 import {chainMiddleware} from './middleware'
 
 export const initialState = {
@@ -20,11 +20,17 @@ export function reducer(state,action) {
 export const store = configureStore({
     reducer:{
         character:characterSlice.reducer,
-        skill:skillSlice.reducer,
-        status:statusSlice.reducer
+        skill:skillSlice2.reducer,
+        status:statusSlice2.reducer
     },
     middleware:[chainMiddleware]
 })
+
+export type storeType = {
+    character: EntityState<characterSheet2>;
+    skill: EntityState<Skill>;
+    status: EntityState<StatusTypeBox>;
+}
 
 export const SiteContext = React.createContext(initialState);
 

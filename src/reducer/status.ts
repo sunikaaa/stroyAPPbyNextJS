@@ -34,7 +34,7 @@ export const getters =  {
             })
         }
         return {status:NaN,damage:"ERROR this status not include 'STR' or 'SIZ'"}
-    }
+    },
 }
 export type StatusTypeBox = {
     id:number

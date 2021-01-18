@@ -2,6 +2,8 @@ import {createSlice,PayloadAction,createEntityAdapter, configureStore,combineRed
 import oldCoCJson from '../assets/old-coc-status.json'
 import skill from '../components/old-coc/skill'
 import _, { values } from 'lodash'
+import { RootStateOrAny } from 'react-redux'
+import { storeType } from '.'
 
 export type abilityName = "battle" | "find" | "move" | "talk" | "int"
 export  type mainStatusName = "STR" | "CON" | "POW" | "SIZ" | "DEX" | "APP" | "INT" | "EDU"
@@ -57,7 +59,7 @@ export type statusType = {
     secondStatus:SecondStatusType[]
 }
 
-type characterSheet = {
+export type characterSheet = {
     id?:string
     name:string,
     descriptionId:string[],
@@ -66,13 +68,22 @@ type characterSheet = {
     type: 'OLDCOC'
 }
 
-export const characterSheet = createEntityAdapter<characterSheet>({
+export type characterSheet2 = {
+    id?:string
+    name:string,
+    descriptionId:string[],
+    statusId: string[][],
+    skillId: string[],
+    type: 'OLDCOC'
+}
+
+export const characterSheetAdapter = createEntityAdapter<characterSheet2>({
     selectId:state=>state.id
 })
 
 export const characterSlice = createSlice({
     name:'old-coc',
-    initialState:characterSheet.getInitialState(),
+    initialState:characterSheetAdapter.getInitialState(),
         
     reducers:{
         createOldCoCSheet(state){
@@ -85,12 +96,12 @@ export const characterSlice = createSlice({
                 skillId:[`${length}s${length}`],
                 type:'OLDCOC'
             }
-            characterSheet.addOne(state,createData)
+            // characterSheet.addOne(state,createData)
         },
-        createStatus:characterSheet.addOne
+        createCharacter:characterSheetAdapter.addOne
     }
 })
-export const {createOldCoCSheet} = characterSlice.actions
+export const {createOldCoCSheet,createCharacter} = characterSlice.actions
 
 
 export const store = configureStore({
@@ -98,3 +109,8 @@ export const store = configureStore({
         character:characterSlice.reducer,
     }
 })
+
+export const characterSelectors = characterSheetAdapter.getSelectors(
+    (state:storeType)=>state.character
+)
+export const characterSelectById = (id:number) => _.partialRight(characterSelectors.selectById,id)

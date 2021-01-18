@@ -2,6 +2,7 @@ import {createSlice,createEntityAdapter, configureStore} from '@reduxjs/toolkit'
 import {ability} from './old-coc'
 import _ from 'lodash'
 import { RootStateOrAny } from 'react-redux'
+import { storeType } from '.'
 export type abilityName = "battle" | "find" | "move" | "talk" | "int"
 
 export type Skill = {
@@ -15,10 +16,10 @@ export type Skill = {
     type:string
     skillId:string
 }
-const skillAdapter = createEntityAdapter<Skill>({
+export const skillAdapter = createEntityAdapter<Skill>({
     selectId:(skill) =>skill.skillId
 })
-export const abilitySet:{[x:string]:Skill} = _.map(ability,(v,i)=>v.map(v=>{
+export const skillSet:{[x:string]:Skill} = _.map(ability,(v,i)=>v.map(v=>{
     v.type = i
     return v
 })).flat().reduce((sum,v:Skill,i)=>{
@@ -32,7 +33,12 @@ export const skillSlice2 = createSlice({
     initialState:skillAdapter.getInitialState(),
     reducers:{
         createSkill:skillAdapter.addOne,
+        updateSkill:skillAdapter.updateOne
     }
 })
 
-export const {createSkill} = skillSlice2.actions
+export const {createSkill,updateSkill} = skillSlice2.actions
+export const skillSelectors = skillAdapter.getSelectors(
+    (state:storeType)=>state.skill
+)
+export const skillSelectById = (id:string) => _.partialRight(skillSelectors.selectById,id)
