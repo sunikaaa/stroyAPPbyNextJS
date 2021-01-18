@@ -1,20 +1,13 @@
 import next from 'next'
 import { Reducer } from 'react'
 import { Store } from 'redux'
-import { CREATE_OLDCOC, CREATE_OLDCOC2, UPDATE_SECONDSTATUS } from './middlewareAction'
+import { CREATE_OLDCOC, UPDATE_SECONDSTATUS } from './middlewareAction'
 import {characterSheet2, createCharacter, createOldCoCSheet,status} from './old-coc'
-import {createOldCoCSkill,abilitySet} from './skill'
-import {createSkill, Skill,skillSet} from './skill2'
-import {createOldCoCStatus} from './status'
-import {createStatus,StatusTypeBox} from './status2'
+import {createSkill, skillSet} from './skill'
+import {createStatus,StatusTypeBox} from './status'
 import _ from 'lodash'
 const createOldCoC = {
     [CREATE_OLDCOC.name](store:Store){
-        store.dispatch(createOldCoCSheet())
-        store.dispatch(createOldCoCSkill())
-        store.dispatch(createOldCoCStatus())
-    },
-    [CREATE_OLDCOC2.name](store:Store){
         const {mainStatus,secondStatus} = _.cloneDeep(status)
         const skillArray = _.cloneDeep(skillSet)
         const length = store.getState().character.ids.length

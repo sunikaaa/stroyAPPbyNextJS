@@ -1,8 +1,9 @@
 import _ from 'lodash'
-import {damageBonus, status,damageBonusType} from './old-coc'
-import {createSlice,createEntityAdapter, configureStore} from '@reduxjs/toolkit'
+import {damageBonus, status,damageBonusType, statusType} from './old-coc'
+import {createSlice,createEntityAdapter, configureStore, Dictionary, createSelector} from '@reduxjs/toolkit'
 import { arrayToObj,diceRoll } from '../plugins/benri'
 import { RootStateOrAny } from 'react-redux'
+import { storeType } from '.'
 
 
 export  type mainStatusName = "STR" | "CON" | "POW" | "SIZ" | "DEX" | "APP" | "INT" | "EDU"
@@ -24,9 +25,16 @@ export const getters =  {
     sum(status:StatusType):number{
         return Number(status.roll) + Number(status.updown) + Number(status.other)
     },
-    damageBonus(statusBox:StatusTypeBox):damageBonusType{
-        const {status} = statusBox
-        const {STR,SIZ} = status
+    damageBonus(statusBox:Dictionary<StatusTypeBox>,ids:string[]):damageBonusType{
+        let STR:StatusTypeBox,SIZ:StatusTypeBox
+        ids.forEach(v=>{
+            if(statusBox[v]?.name === 'STR'){
+                STR = statusBox[v]
+            }
+            if(statusBox[v]?.name === 'SIZ'){
+                SIZ = statusBox[v]
+            }
+        })
         if(STR && SIZ){
             const damage = getters.sum(STR) + getters.sum(SIZ)
             return damageBonus.reduceRight((result,cu)=>{
@@ -35,89 +43,76 @@ export const getters =  {
         }
         return {status:NaN,damage:"ERROR this status not include 'STR' or 'SIZ'"}
     },
+    calcRoll(statusBox:Dictionary<StatusTypeBox>,ids:string[][]){
+        const [mainIds,secondIds] = ids
+        secondStatusId.forEach(statusId=>{
+            const formula = statusBox[statusId].formula.split(" ")
+            const formulaMap = formula.map(v=>{
+            })
+        })
+    }
 }
 export type StatusTypeBox = {
     id:number
-    status:{
-        [key:string]:StatusType
-    }
+    name:string
+    other?:string
+    roll?:string
+    updown?:string
+    dice?:string
+    statusId:string
+    formula?:string
 }
+
 const initialFirstStatus = arrayToObj(status.mainStatus.map(v=>{return{...v,roll:0,other:0,updown:0}}),'name')
 const initialSecondStatus = arrayToObj(status.secondStatus.map(v=>{return{...v,roll:0,other:0,updown:0}}),'name')
 
 const statusAdapter = createEntityAdapter<StatusTypeBox>({
-    selectId: (statusBox) => statusBox.id
+    selectId: (statusBox) => statusBox.statusId
 })
-export const statusSlice = createSlice({
-    name: 'status',
+
+export const statusSlice2 = createSlice({
+    name:'status2',
     initialState:statusAdapter.getInitialState(),
     reducers:{
-        createOldCoCStatus(state){
-            const newMainStatus = _.cloneDeep(initialFirstStatus)
-            const addMain:StatusTypeBox = {
-                id:state.ids.length,
-                status:newMainStatus
-            }
-            const newSecondStatus = _.cloneDeep(initialSecondStatus)
-            const addSecond:StatusTypeBox = {
-                id:state.ids.length + 1,
-                status:newSecondStatus
-            }
-            statusAdapter.addMany(state,[addMain,addSecond])
-        },
-        updateStatus:statusAdapter.updateOne,
-        updateDiceRoll(state,{payload}:{payload:{id:number}}){
-            const {id} = payload
-            let status = _.cloneDeep(state.entities[id].status)
-            mainStatusId.forEach((statusName)=>{
-                let diceArray = status[statusName].dice.split(" ")
-                let diceResult = diceArray.map(v=>{
-                    if(v.includes("d")){
-                        const dice:number[] = v.split("d").map(v=>Number(v))
-                        return diceRoll(dice[0],dice[1]).reduce((sum,cu)=>sum + cu).toString()
-                    }
-                    return v
-                })
-                status[statusName].roll = eval(diceResult.join(''))
+        createOldCoCStatus2(state,{payload}){
+            status.mainStatus.forEach((v:StatusTypeBox,i)=>{
+                const id = i * 2
+                v.statusId = payload.id + 'status' + id
+                v.roll = "0"
+                v.other = "0"
+                v.updown = "0"
+                v.id = i
+                statusAdapter.addOne(state,v)
             })
-            const changes:StatusTypeBox = {
-                id:id,
-                status:status
-            }
-            statusAdapter.updateOne(state,{id:id,changes:changes})
-        },
-        calcRoll(state,{payload}:{payload:{id:number[]}}){
-            const [dependId,changeId] = payload.id
-            const mainStatus = state.entities[dependId].status
-            const secondStatus = _.cloneDeep(state.entities[changeId].status)
-            secondStatusId.forEach(statusName=>{
-                const formula = secondStatus[statusName].formula.split(" ")
-                const formulaMap = formula.map(v=>{
-                    const findData = _.find(mainStatus,status=>status.name === v)
-                    return findData ? getters.sum(findData) : v
-                }).join('')
-                const formulaed = _.isNumber(eval(formulaMap)) ? eval(formulaMap) : NaN
-                secondStatus[statusName].roll = Math.ceil(formulaed).toString()
+            status.secondStatus.forEach((v,i)=>{
+                const id =  (i * 2 + 1)
+                v.id = i
+                v.statusId = payload.id + 'status' + id
+                v.roll = "0"
+                v.other = "0"
+                v.updown = "0"
+                statusAdapter.addOne(state,v as StatusTypeBox)
             })
-            const changes:StatusTypeBox = {
-                id:changeId,
-                status:secondStatus
-            }
-            statusAdapter.updateOne(state,{id:changeId,changes:changes})
-        }
-    },
-})
-
-
-export const statusSelectors = statusAdapter.getSelectors(
-    (state:RootStateOrAny)=>state.status
-)
-export const statusSelectById = (id:number) => _.partialRight(statusSelectors.selectById,id)
-
-
-export const {createOldCoCStatus,updateDiceRoll,calcRoll,updateStatus} = statusSlice.actions
-export const store = configureStore({
-    reducer:{
-        status:statusSlice.reducer,
+        },
+        createStatus:statusAdapter.addOne,
+        updateStatus:statusAdapter.updateOne
     }
 })
+export const {createOldCoCStatus2,createStatus,updateStatus} = statusSlice2.actions
+export const store = configureStore({
+    reducer:{
+        status:statusSlice2.reducer
+    }
+})
+export const statusSelectors = statusAdapter.getSelectors(
+    (state:storeType)=>state.status
+)
+export const statusSelectById = (id:string) => _.partialRight(statusSelectors.selectById,id)
+export const statusSelectByIdsBox = createSelector(
+    (state:storeType)=> state,
+    (state:storeType,ids:string[])=>ids,
+    (state:storeType,ids:string[])=>{
+        return statusSelectors.selectAll(state).filter(status=>ids.some(id=>status.statusId === id))    }
+)
+
+export const statusSelectByIds = (ids:string[]) => _.partialRight(statusSelectByIdsBox,ids)

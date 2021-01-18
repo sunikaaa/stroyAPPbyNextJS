@@ -3,7 +3,7 @@ import React, { useState, useEffect, ChangeEvent, useCallback } from 'react'
 import { Container, Button } from '@material-ui/core'
 import {store, storeType} from '../../reducer/index'
 import {CREATE_OLDCOC} from '../../reducer/middlewareAction'
-import {getters, mainStatusId, statusSelectById,statusSelectByIds,statusSelectors,StatusType,StatusTypeBox,updateStatus} from '../../reducer/status2'
+import {getters, mainStatusId, statusSelectById,statusSelectByIds,statusSelectors,StatusType,StatusTypeBox,updateStatus} from '../../reducer/status'
 import { useSelector } from 'react-redux';
 import _, { values } from 'lodash'
 import { Classes } from '@material-ui/styles/mergeClasses/mergeClasses';
