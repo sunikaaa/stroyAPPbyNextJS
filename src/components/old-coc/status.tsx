@@ -1,13 +1,14 @@
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState, useEffect, ChangeEvent, useCallback } from 'react'
+import React, { useEffect, useCallback } from 'react'
 import { Container, Button } from '@material-ui/core'
-import {store, storeType} from '../../reducer/index'
-import {CREATE_OLDCOC} from '../../reducer/middlewareAction'
-import {getters, mainStatusId, statusSelectById,statusSelectByIds,statusSelectors,StatusType,StatusTypeBox,updateStatus} from '../../reducer/status'
+import {store} from '../../reducer/index'
+import {statusGetters, statusSelectById,statusSelectByIds,statusSelectByName,statusSelectors,StatusTypeBox,updateStatus} from '../../reducer/status'
 import { useSelector } from 'react-redux';
-import _, { values } from 'lodash'
+import _ from 'lodash'
 import { Classes } from '@material-ui/styles/mergeClasses/mergeClasses';
-import { calcRoll } from '../../plugins/benri';
+import { calcMaxRoll, calcRoll, calcString } from '../../plugins/benri';
+import { Skill, updateSkill } from '../../reducer/skill';
+import { Dictionary } from '@reduxjs/toolkit';
 const useStyles = makeStyles({
     table: {
         width: '60px'
@@ -24,8 +25,7 @@ const useStyles = makeStyles({
 
 
 
-export default function CreateCharSheet({ids}:{ids:string[][]}) {
-    const classes = useStyles();
+export default function CreateCharSheet({ids,exceptionSkill}:{ids:string[][],exceptionSkill:Skill[]}) {
     const [mainStatusIds,secondStatusIds] = ids
     const statusAll = useSelector(statusSelectors.selectEntities)
     const mainStatus = useSelector(statusSelectByIds(ids[0]))
@@ -48,8 +48,8 @@ export default function CreateCharSheet({ids}:{ids:string[][]}) {
                         <th>その他</th>
                         <th>合計</th>
                     </tr>
-                    {mainStatusIds.map((id, i)=>(
-                        <MainStatusTableTR id={id} key={id} secondStatus={secondStatus} mainStatus={mainStatus} />
+                    {mainStatusIds.map((id)=>(
+                        <MainStatusTableTR id={id} key={id} secondStatus={secondStatus} mainStatus={mainStatus} exceptionSkill={exceptionSkill} />
                     ))}
                 </tbody>
             </table>
@@ -62,8 +62,8 @@ export default function CreateCharSheet({ids}:{ids:string[][]}) {
                         <th>その他</th>
                         <th>合計</th>
                     </tr>
-                {secondStatusIds.map((id, i) =>(<SecondStatusTableTR id={id} key={id} mainIds={mainStatusIds}  />))}
-                <tr><th colSpan={2} >ダメージボーナス</th><th colSpan={2}>{getters.damageBonus(statusAll,ids[0]).damage}</th></tr>
+                {secondStatusIds.map((id) =>(<SecondStatusTableTR id={id} key={id} mainIds={mainStatusIds}  />))}
+                <DamageComponent  ids={ids[0]} />
                 </tbody>
             </table>
         </div>
@@ -75,7 +75,7 @@ export default function CreateCharSheet({ids}:{ids:string[][]}) {
 
 }
 
-const MainStatusTableTR = React.memo(({id,secondStatus,mainStatus}:{id:string,secondStatus:StatusTypeBox[],mainStatus:StatusTypeBox[]})=>{
+const MainStatusTableTR = React.memo(({id,secondStatus,mainStatus,exceptionSkill}:{id:string,secondStatus:StatusTypeBox[],mainStatus:StatusTypeBox[],exceptionSkill:Skill[]})=>{
     const status = useSelector(statusSelectById(id))
     const classes = useStyles()
     const memoizeCallback = useCallback(
@@ -91,18 +91,29 @@ const MainStatusTableTR = React.memo(({id,secondStatus,mainStatus}:{id:string,se
                 const formula = s.formula.split(" ")
                 const formulaMap = formula.map(v=>{
                     const findData = _.find(mainStatus,status=>status.name === v)
-                    return findData ? getters.sum(findData) : v
+                    return findData ? statusGetters.sum(findData) : v
                 }).join('')
-                const formulaed = _.isNumber(eval(formulaMap)) ? Math.ceil(eval(formulaMap)) : NaN
-                console.log(s,formulaed)
+                const formulaed = _.isNumber(calcString(formulaMap)) ? Math.ceil(calcString(formulaMap)) : NaN
                 store.dispatch(updateStatus({id:s.statusId,changes:{roll:formulaed.toString()}}))
+            }
+        })
+        exceptionSkill.forEach(s=>{
+            if(s.formula.includes(status.name)){
+                const formula = s.formula.split(" ")
+                const formulaMap = formula.map(v=>{
+                    const findData = _.find(mainStatus,status=>status.name === v)
+                    return findData ? statusGetters.sum(findData) : v
+                }).join('')
+                const formulaed = _.isNumber(calcString(formulaMap)) ? Math.ceil(calcString(formulaMap)) : NaN
+               store.dispatch(updateSkill({id:s.skillId,changes:{initial:formulaed}}))
             }
         })
  
     },[status])
-    return <TR status={status} classes={classes} dispatch={memoizeCallback}></TR>
+    const MaxRoll = calcMaxRoll(status.dice)  - Number(status.roll) === 0 
+    return <TR status={status} classes={classes} dispatch={memoizeCallback}  inputRed={MaxRoll}></TR>
 })
-const SecondStatusTableTR =React.memo(({id,mainIds}:{id:string,mainIds:string[]})=>{
+const SecondStatusTableTR =React.memo(({id}:{id:string,mainIds:string[]})=>{
     const status = useSelector(statusSelectById(id))
     const classes = useStyles()
     const memoizeCallback = useCallback(
@@ -111,16 +122,22 @@ const SecondStatusTableTR =React.memo(({id,mainIds}:{id:string,mainIds:string[]}
         },
         [status]
     )
-    return <TR status={status} classes={classes} dispatch={memoizeCallback} isInput={false}></TR>
+    return <TR status={status} classes={classes} dispatch={memoizeCallback} isInput={false} ></TR>
 })
-const TR = React.memo( ({status,classes,dispatch,isInput = true}:{status:StatusTypeBox,classes:Classes,dispatch:any,isInput?:boolean})=>{
+const TR = React.memo( ({status,classes,dispatch,isInput = true,inputRed}:{status:StatusTypeBox,classes:Classes,dispatch:any,isInput?:boolean,inputRed?:boolean})=>{
     return <>
     <tr>
         <th>{status.name}</th>
-        <th>{isInput ? <input value={status.roll} type="number" className={classes.table} onChange={(e) => dispatch(e.target.value,'roll')} /> : status.roll}</th>
+        <th>{isInput ? <input value={status.roll} type="number" className={`${classes.table} ${inputRed ? 'text-red-500': ''}`} onChange={(e) => dispatch(e.target.value,'roll')} /> : status.roll}</th>
         <th><input value={status.updown}  type="number" className={classes.table} onChange={(e) => dispatch(e.target.value,'updown')} /></th>
         <th><input value={status.other}  type="number"  className={classes.table} onChange={(e) => dispatch(e.target.value,'other')} /></th>
-        <th>{getters.sum(status)}</th>
+        <th>{statusGetters.sum(status)}</th>
     </tr>
 </>
+})
+const DamageComponent = React.memo(({ids}:{ids:string[]})=>{
+    const STR = useSelector(statusSelectByName("STR",ids))
+    const SIZ = useSelector(statusSelectByName("SIZ",ids))
+    console.log("changes")
+    return <><tr><th colSpan={2} >ダメージボーナス</th><th colSpan={2}>{statusGetters.damageBonus(STR,SIZ).damage}</th></tr></>
 })

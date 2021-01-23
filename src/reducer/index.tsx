@@ -2,9 +2,10 @@ import React,{ReactChildren, useReducer} from 'react'
 import {configureStore, EntityState} from '@reduxjs/toolkit'
 
 import {characterSheet2, characterSheetAdapter, characterSlice} from './old-coc'
-import {Skill, skillSlice2} from './skill2'
-import {statusSlice2, StatusType, StatusTypeBox} from './status2'
+import {Skill, skillSlice2} from './skill'
+import {statusSlice2, StatusType, StatusTypeBox} from './status'
 import {chainMiddleware} from './middleware'
+import {connectRouter} from 'connected-react-router'
 
 export const initialState = {
 

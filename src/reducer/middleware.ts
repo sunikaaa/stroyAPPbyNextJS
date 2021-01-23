@@ -5,7 +5,9 @@ import { CREATE_OLDCOC, UPDATE_SECONDSTATUS } from './middlewareAction'
 import {characterSheet2, createCharacter, createOldCoCSheet,status} from './old-coc'
 import {createSkill, skillSet} from './skill'
 import {createStatus,StatusTypeBox} from './status'
+import {format} from 'date-fns'
 import _ from 'lodash'
+import { nowFormatDate } from '../plugins/benri'
 const createOldCoC = {
     [CREATE_OLDCOC.name](store:Store){
         const {mainStatus,secondStatus} = _.cloneDeep(status)
@@ -13,11 +15,13 @@ const createOldCoC = {
         const length = store.getState().character.ids.length
         let createData:characterSheet2 = {
             id:length.toString(),
-            name: "",
+            name: "名無し" + length,
             descriptionId:[],
             statusId:[[],[]],
             skillId:[],
-            type:'OLDCOC'
+            type:'oldcoc',
+            created:nowFormatDate(),
+            updated:nowFormatDate()     
         }
         mainStatus.map((v:StatusTypeBox,i)=>{
             v.statusId = length + 'main' + i

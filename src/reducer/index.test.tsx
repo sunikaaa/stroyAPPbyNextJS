@@ -21,4 +21,11 @@ test("store",()=>{
     store.dispatch(CREATE_OLDCOC)
     // const component = renderer.create(<Provider store={store}><Test></Test></Provider>)
     // const tree =component.toJSON()
+    const testFunc = (a: any,b: any,c: any,d: any) =>{
+        console.log(a,b,c,d)
+        return [a,b,c,d]
+    }
+    const test2 = (b,c,d) =>_.partial(testFunc,"a",b,c,d)
+    console.log(test2)
+    console.log(test2("a","b","c")())
 })

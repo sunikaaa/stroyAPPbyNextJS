@@ -1,3 +1,3 @@
 import {store} from './index'
 import {characterSheetAdapter} from './old-coc'
-import {} from './skill2'
+import {} from './skill'

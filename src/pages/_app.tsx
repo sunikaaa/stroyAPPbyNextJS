@@ -7,6 +7,7 @@ import {ThemeProvider as MaterialUIThemeProvider,StylesProvider} from '@material
 import CssBaseline from '@material-ui/core/CssBaseline'
 import theme from '../styles/theme'
 import Header from '../components/big/header'
+import Footer from '../components/big/footer'
 import {SiteProvider, store} from '../reducer/index'
 import { Provider } from 'react-redux'
 
@@ -28,6 +29,7 @@ const MyApp = ({Component,pageProps}):JSX.Element => {
         <CssBaseline />
         <Header />
           <Component {...pageProps} />
+        <Footer />
         </SiteProvider>
       </MaterialUIThemeProvider>
     </StylesProvider>

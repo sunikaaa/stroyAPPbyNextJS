@@ -1,9 +1,10 @@
 import {createSlice,PayloadAction,createEntityAdapter, configureStore,combineReducers, Store} from '@reduxjs/toolkit'
 import oldCoCJson from '../assets/old-coc-status.json'
 import skill from '../components/old-coc/skill'
-import _, { values } from 'lodash'
+import _, { update, values } from 'lodash'
 import { RootStateOrAny } from 'react-redux'
 import { storeType } from '.'
+import { nowFormatDate } from '../plugins/benri'
 
 export type abilityName = "battle" | "find" | "move" | "talk" | "int"
 export  type mainStatusName = "STR" | "CON" | "POW" | "SIZ" | "DEX" | "APP" | "INT" | "EDU"
@@ -19,22 +20,6 @@ export type damageBonusType = {
 export const {ability,status,damageBonus}:{ability:abilityType,status:statusType,damageBonus:damageBonusType[]} = JSON.parse(JSON.stringify(oldCoCJson))
 
 
-export type Skill = {
-    initial:number
-    name:string
-    furigana?:string
-    job:number
-    hobby:number
-    other:number
-    type:string
-}
-
-export type SkillArray = {
-    id:string
-    skill: {
-        [key:string]:Skill
-    }
-}
 
 export type MainStatusType = {
     name:string
@@ -59,22 +44,16 @@ export type statusType = {
     secondStatus:SecondStatusType[]
 }
 
-export type characterSheet = {
-    id?:string
-    name:string,
-    descriptionId:string[],
-    statusId: string[],
-    skillId: string[],
-    type: 'OLDCOC'
-}
 
 export type characterSheet2 = {
-    id?:string
+    id?:string | number
     name:string,
     descriptionId:string[],
     statusId: string[][],
     skillId: string[],
-    type: 'OLDCOC'
+    type: 'oldcoc',
+    updated: string,
+    created: string
 }
 
 export const characterSheetAdapter = createEntityAdapter<characterSheet2>({
@@ -94,14 +73,17 @@ export const characterSlice = createSlice({
                 descriptionId:[],
                 statusId:[`${length}s${length * 2}`,`${length}s${length * 2 + 1}`],
                 skillId:[`${length}s${length}`],
-                type:'OLDCOC'
+                type:'oldcoc'
             }
             // characterSheet.addOne(state,createData)
         },
-        createCharacter:characterSheetAdapter.addOne
+        createCharacter:characterSheetAdapter.addOne,
+        updateDate(state,{payload}:{payload:{id:string}}){
+            characterSheetAdapter.updateOne(state,{id:payload.id,changes:{updated:nowFormatDate()}})
+        }
     }
 })
-export const {createOldCoCSheet,createCharacter} = characterSlice.actions
+export const {createOldCoCSheet,createCharacter,updateDate} = characterSlice.actions
 
 
 export const store = configureStore({

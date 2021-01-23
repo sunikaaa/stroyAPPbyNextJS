@@ -34,7 +34,8 @@
             "initial": 0,
             "job": 0,
             "hobby": 0,
-            "other": 0
+            "other": 0,
+            "formula": "DEX * 2"
         }, {
             "id": 1,
             "name": "キック",
@@ -435,7 +436,8 @@
             "initial": 0,
             "job": 0,
             "hobby": 0,
-            "other": 0
+            "other": 0,
+            "formula": "EDU * 5"
         }]
     }
 
