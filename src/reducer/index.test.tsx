@@ -1,5 +1,4 @@
 import { Provider, RootStateOrAny, useSelector } from 'react-redux'
-import {store} from './index'
 import {CREATE_OLDCOC} from './middlewareAction'
 import {statusSelectById} from './status'
 import {skillSelectById} from './skill'
@@ -16,9 +15,6 @@ const  Test = ()=>{
 
 
 test("store",()=>{
-    store.dispatch(CREATE_OLDCOC)
-    store.dispatch(CREATE_OLDCOC)
-    store.dispatch(CREATE_OLDCOC)
     // const component = renderer.create(<Provider store={store}><Test></Test></Provider>)
     // const tree =component.toJSON()
     const testFunc = (a: any,b: any,c: any,d: any) =>{

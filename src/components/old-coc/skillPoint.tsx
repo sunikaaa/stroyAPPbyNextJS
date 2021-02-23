@@ -52,10 +52,13 @@ const DisplayPoint = React.memo(({pointName,maxName,skillId,statusId,pointDispla
     const status = useSelector(statusSelectByName(maxName,statusId))
     const pointMax = statusGetters.sum(status) * magnification
     const Error = (pointMax - pointSum) < 0
-    return (          <div className="w-40 h-10 mx-2 bg-red-50 rounded-md border-gray-500 text-center leading-10  text-xl">
-    <span className="text-xs leading-1 pw-1 align-top"  >{pointDisplayName}</span>
+    return (          <div className="w-40 h-10 mx-2 bg-red-50 flex justify-between   rounded-md border-gray-500 text-center leading-10  text-xl">
+    <span className="text-xs leading-1 pw-1 align-top "  >{pointDisplayName}</span>
+    <div>
     <span className={` ${Error ? "text-red-600" : ""}`}  >{pointSum}</span>
     <span className=" p-2"  >/</span>
     <span className=""  >{pointMax}</span>
+    </div>
+    <div className=""> </div> 
     </div>)
 })

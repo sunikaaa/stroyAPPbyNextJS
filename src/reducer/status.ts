@@ -57,7 +57,7 @@ export type StatusTypeBox = {
 const initialFirstStatus = arrayToObj(status.mainStatus.map(v=>{return{...v,roll:0,other:0,updown:0}}),'name')
 const initialSecondStatus = arrayToObj(status.secondStatus.map(v=>{return{...v,roll:0,other:0,updown:0}}),'name')
 
-const statusAdapter = createEntityAdapter<StatusTypeBox>({
+export const statusAdapter = createEntityAdapter<StatusTypeBox>({
     selectId: (statusBox) => statusBox.statusId
 })
 
@@ -86,25 +86,26 @@ export const statusSlice2 = createSlice({
             })
         },
         createStatus:statusAdapter.addOne,
-        updateStatus:statusAdapter.updateOne
+        updateStatus:statusAdapter.updateOne,
+        deleteStatus:statusAdapter.removeOne
     }
 })
-export const {createOldCoCStatus2,createStatus,updateStatus} = statusSlice2.actions
+export const {createOldCoCStatus2,createStatus,updateStatus,deleteStatus} = statusSlice2.actions
 export const store = configureStore({
     reducer:{
         status:statusSlice2.reducer
     }
 })
 export const statusSelectors = statusAdapter.getSelectors(
-    (state:storeType)=>state.status
+    (state:RootStateOrAny)=>state.rootReducer.status
 )
 export const statusSelectById = (id:string) => {
     return _.partialRight(statusSelectors.selectById,id)
 }
 export const statusSelectByIdsBox = createSelector(
-    (state:storeType)=>state,
-    (state:storeType,ids:string[])=>ids,
-    (state:storeType,ids:string[])=>{
+    (state:RootStateOrAny)=>state,
+    (state:RootStateOrAny,ids:string[])=>ids,
+    (state:RootStateOrAny,ids:string[])=>{
         return  ids.map(id => statusSelectors.selectById(state,id))
     }
 )
@@ -112,7 +113,7 @@ export const statusSelectByIdsBox = createSelector(
 export const statusSelectByIds = (ids:string[]) => _.partialRight(statusSelectByIdsBox,ids)
 export const statusSelectByNameBox = createSelector(
     statusSelectByIdsBox,
-    (state:storeType,ids:string[],name:string)=>name,
+    (state:RootStateOrAny,ids:string[],name:string)=>name,
     (statusBox:StatusTypeBox[],name:string)=>{
         return statusBox.find(status=>status.name === name)
     }

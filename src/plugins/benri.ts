@@ -44,6 +44,6 @@ export const sheetTypeToJP = (str:string) => {
      return '不明のシート'
   }  
 }
-export const nowFormatDate = () => {
-  return format(Date.now(),'yyyy/MM/dd HH:mm')
+export const nowFormatDate = (date:number) => {
+  return format(date,'yyyy/MM/dd HH:mm')
 }

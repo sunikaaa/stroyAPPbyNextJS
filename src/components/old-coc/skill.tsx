@@ -1,10 +1,8 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Update } from '@reduxjs/toolkit';
 import _ from 'lodash';
-import React, { useState, useEffect, ReactEventHandler, ChangeEvent, Dispatch, SetStateAction, useCallback } from 'react'
-import { useSelector } from 'react-redux';
-import { store } from '../../reducer';
-import { Skill, skillSelectById, updateSkill,skillGetters } from '../../reducer/skill';
+import React, { useState, useCallback } from 'react'
+import { useDispatch, useSelector } from 'react-redux';
+import { skillSelectById, updateSkill,skillGetters } from '../../reducer/skill';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/core/Autocomplete';
 // import { Skill, SkillArray, skillSelectById, updateSkill,skillId } from '../../reducer/skill';
@@ -32,15 +30,17 @@ const useStyles = makeStyles({
 
 
 export default React.memo(({ ids}:{ids:string[]})=> {
-
    const [filterAutoCompleteState,setFilterAutoComplete] = useState(autoCompleteData[0])
    const [filterInput,setFilterInput] = useState("")
    return (<>
-   <ComboBox state={filterAutoCompleteState} stateInput={filterInput} setInputDispatch={setFilterInput} setDispatch={setFilterAutoComplete} ></ComboBox>
-
-      <div className="">
+      <div className="flex justify-center ">
          <table className="table-auto mb-10">
             <tbody>
+               <tr>
+                <th colSpan={5}>
+                   <ComboBox state={filterAutoCompleteState} stateInput={filterInput} setInputDispatch={setFilterInput} setDispatch={setFilterAutoComplete} ></ComboBox>
+                 </th>
+               </tr>
             <SkillTableTR filterState={filterAutoCompleteState} filterInput={filterInput} ids={ids} /> 
             </tbody>
          </table>
@@ -58,7 +58,7 @@ const SkillTableTR = React.memo(({ ids,filterState,filterInput }: { ids:string[]
       <th>その他</th>
       <th>合計</th>
    </tr>
-   {_.map(ids,(id,i)=>
+   {_.map(ids,(id)=>
       <SkillTableCell id={id} key={id} filter={filterState} filterInput={filterInput} ></SkillTableCell>
          )}
       </>
@@ -68,9 +68,10 @@ const SkillTableTR = React.memo(({ ids,filterState,filterInput }: { ids:string[]
 const SkillTableCell = React.memo(({id,filter,filterInput}:{id:string,filter?:autocompleteDataType,filterInput:string})=>{
    const skill = useSelector(skillSelectById(id))
    const classes= useStyles()
+   const dispatch = useDispatch()
    const memoizeCallback = useCallback(
       (value,adapterName) => {
-         store.dispatch(updateSkill({id,changes:{[adapterName]:value}}))
+         dispatch(updateSkill({id,changes:{[adapterName]:value}}))
       },
       [skill]
    )

@@ -3,8 +3,10 @@ import oldCoCJson from '../assets/old-coc-status.json'
 import skill from '../components/old-coc/skill'
 import _, { update, values } from 'lodash'
 import { RootStateOrAny } from 'react-redux'
-import { storeType } from '.'
 import { nowFormatDate } from '../plugins/benri'
+import { Skill } from './skill'
+import { storeType } from '.'
+import {compareAsc} from 'date-fns'
 
 export type abilityName = "battle" | "find" | "move" | "talk" | "int"
 export  type mainStatusName = "STR" | "CON" | "POW" | "SIZ" | "DEX" | "APP" | "INT" | "EDU"
@@ -52,12 +54,13 @@ export type characterSheet2 = {
     statusId: string[][],
     skillId: string[],
     type: 'oldcoc',
-    updated: string,
-    created: string
+    updated: number
+    created: number
 }
 
 export const characterSheetAdapter = createEntityAdapter<characterSheet2>({
-    selectId:state=>state.id
+    selectId:state=>state.id,
+    sortComparer:(a,b) =>  compareAsc(b.updated,a.updated)
 })
 
 export const characterSlice = createSlice({
@@ -65,34 +68,18 @@ export const characterSlice = createSlice({
     initialState:characterSheetAdapter.getInitialState(),
         
     reducers:{
-        createOldCoCSheet(state){
-            const length = state.ids.length
-            const createData:characterSheet= {
-                id:length.toString(),
-                name:"",
-                descriptionId:[],
-                statusId:[`${length}s${length * 2}`,`${length}s${length * 2 + 1}`],
-                skillId:[`${length}s${length}`],
-                type:'oldcoc'
-            }
-            // characterSheet.addOne(state,createData)
-        },
+
         createCharacter:characterSheetAdapter.addOne,
         updateDate(state,{payload}:{payload:{id:string}}){
-            characterSheetAdapter.updateOne(state,{id:payload.id,changes:{updated:nowFormatDate()}})
-        }
+            characterSheetAdapter.updateOne(state,{id:payload.id,changes:{updated:Date.now()}})
+        },
+        deleteCharacter:characterSheetAdapter.removeOne
     }
 })
-export const {createOldCoCSheet,createCharacter,updateDate} = characterSlice.actions
+export const {createCharacter,updateDate,deleteCharacter} = characterSlice.actions
 
-
-export const store = configureStore({
-    reducer:{
-        character:characterSlice.reducer,
-    }
-})
 
 export const characterSelectors = characterSheetAdapter.getSelectors(
-    (state:storeType)=>state.character
+    (state:RootStateOrAny)=>state.rootReducer.character
 )
 export const characterSelectById = (id:number) => _.partialRight(characterSelectors.selectById,id)
