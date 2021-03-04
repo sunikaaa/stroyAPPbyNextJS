@@ -18,6 +18,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     title: {
       flexGrow: 1,
+      marginRight: "20px"
     },
   }),
 );
@@ -27,11 +28,15 @@ export default function ButtonAppBar() {
 
   return (
       <AppBar position="static" color="transparent">
+
         <Toolbar>
                     {/* <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
             <Menu></Menu>
           </IconButton> */}
+          <div className="mr-2">
+
           <Drawer />
+          </div>
           <Typography variant="h6" className={classes.title}>
             TRPG tools
           </Typography>

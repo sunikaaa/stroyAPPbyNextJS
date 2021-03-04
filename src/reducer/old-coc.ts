@@ -53,6 +53,7 @@ export type characterSheet2 = {
     descriptionId:string[],
     statusId: string[][],
     skillId: string[],
+    items:string[],
     type: 'oldcoc',
     updated: number
     created: number
@@ -73,13 +74,14 @@ export const characterSlice = createSlice({
         updateDate(state,{payload}:{payload:{id:string}}){
             characterSheetAdapter.updateOne(state,{id:payload.id,changes:{updated:Date.now()}})
         },
-        deleteCharacter:characterSheetAdapter.removeOne
+        deleteCharacter:characterSheetAdapter.removeOne,
+        updateCharacter:characterSheetAdapter.updateOne
     }
 })
-export const {createCharacter,updateDate,deleteCharacter} = characterSlice.actions
+export const {createCharacter,updateDate,deleteCharacter,updateCharacter} = characterSlice.actions
 
 
 export const characterSelectors = characterSheetAdapter.getSelectors(
     (state:RootStateOrAny)=>state.rootReducer.character
 )
-export const characterSelectById = (id:number) => _.partialRight(characterSelectors.selectById,id)
+export const characterSelectById = (id:string) => _.partialRight(characterSelectors.selectById,id)

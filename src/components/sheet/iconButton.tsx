@@ -11,6 +11,7 @@ export default function LongMenu({children ,menuClassName=null}) {
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault()
     setAnchorEl(event.currentTarget);
   };
 

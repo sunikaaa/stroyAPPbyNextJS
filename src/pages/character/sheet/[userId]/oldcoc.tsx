@@ -1,6 +1,8 @@
 import StatusPage from '../../../../components/old-coc/status'
 import SkillPage from '../../../../components/old-coc/skill'
 import SkillPoint from '../../../../components/old-coc/skillPoint'
+import Items from '../../../../components/old-coc/items'
+import Description from '../../../../components/old-coc/description'
 import { CREATE_OLDCOC } from '../../../../reducer/middlewareAction'
 import { characterSelectById, updateDate } from '../../../../reducer/old-coc'
 import { useDispatch, useSelector, useStore } from 'react-redux'
@@ -19,9 +21,9 @@ import Input from '@material-ui/core/Input'
 
 export default function OldCoCPage({id,url}){
     const router = useRouter()
-    const characterSheet = useSelector(characterSelectById(Number(id)))
+    const characterSheet = useSelector(characterSelectById(id))
     const exceptionSkill = useSelector(skillExceptionIds(characterSheet.skillId))
-    const [value, setValue] = React.useState(2);
+    const [value, setValue] = React.useState(0);
 
     const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
       setValue(newValue);
@@ -42,25 +44,34 @@ export default function OldCoCPage({id,url}){
         }
     },[])
     return (<>
-    <Input />
-        <Paper square>
+
+        <Paper  square>
       <Tabs
+        className="bg-gray-100"
         value={value}
         indicatorColor="primary"
         textColor="primary"
         onChange={handleChange}
         aria-label="disabled tabs example"
-      >
+        >
+        <Tab label="基本情報" />
         <Tab label="ステータス" />
         <Tab label="スキル"  />
+        <Tab label="所持品"  />
       </Tabs>
     </Paper>
     <TabPanel index={0} value={value}>
-    <StatusPage ids={characterSheet.statusId} exceptionSkill={exceptionSkill} />
+    <Description ids={characterSheet.descriptionId} characterId={id} />
     </TabPanel>
     <TabPanel index={1} value={value}>
+    <StatusPage ids={characterSheet.statusId} exceptionSkill={exceptionSkill} />
+    </TabPanel>
+    <TabPanel index={2} value={value}>
     <SkillPage ids={characterSheet.skillId}></SkillPage>
     <SkillPoint character={characterSheet}></SkillPoint>
+    </TabPanel>
+    <TabPanel index={3} value={value}>
+    <Items ids={characterSheet.items} characterId={id} />
     </TabPanel>
     </>)
 }

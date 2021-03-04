@@ -3,6 +3,8 @@ import {AnyAction, applyMiddleware, combineReducers, configureStore, createStore
 import {characterSheetAdapter, characterSlice} from './old-coc'
 import {skillAdapter, skillSlice2} from './skill'
 import {statusAdapter, statusSlice2} from './status'
+import {descriptionSlice} from './description'
+import {itemSlice} from './items'
 import {chainMiddleware} from './middleware'
 import {connectRouter} from 'connected-react-router'
 import logger from 'redux-logger'
@@ -41,7 +43,9 @@ const reducer = (state:initialState = initialState3 , action: AnyAction) => {
 const rootReducer = combineReducers({        
   character:characterSlice.reducer,
   skill:skillSlice2.reducer,
-  status:statusSlice2.reducer
+  status:statusSlice2.reducer,
+  description:descriptionSlice.reducer,
+  items:itemSlice.reducer
 })
 const persistedReducer = persistReducer(persistConfig,rootReducer)
 let store
