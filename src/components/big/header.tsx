@@ -7,6 +7,7 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Drawer from '../drawer';
 import {Menu} from '@material-ui/icons'
+import { useRouter } from 'next/router';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -24,8 +25,12 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 export default function ButtonAppBar() {
-  const classes = useStyles();
-
+  const classes = useStyles()
+  const router = useRouter()
+  const toLoginPage = (e) => {
+    e.preventDefault()
+    router.push("/login")
+  }
   return (
       <AppBar position="static" color="transparent">
 
@@ -40,7 +45,7 @@ export default function ButtonAppBar() {
           <Typography variant="h6" className={classes.title}>
             TRPG tools
           </Typography>
-          <Button color="inherit">Login</Button>
+          <Button color="inherit" onClick={toLoginPage}>Login</Button>
         </Toolbar>
       </AppBar>
   );
